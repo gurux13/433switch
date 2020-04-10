@@ -1,5 +1,5 @@
 CXXFLAGS=-DRPI
 LDFLAGS=-lwiringPi -lwiringPiDev -lcrypt -lpaho-mqtt3c
 
-SmartSwitch:
-    $(CXX) $(CXXFLAGS) SmartSwitch.cpp ../rc-switch/RCSwitch.cpp -o $@ $(LDFLAGS)
+SmartSwitch: SmartSwitch.cpp ../rc-switch/RCSwitch.cpp ../rc-switch/RCSwitch.h
+	$(CXX) $(CXXFLAGS) SmartSwitch.cpp ../rc-switch/RCSwitch.cpp -o $@ $(LDFLAGS)
