@@ -68,8 +68,6 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	mySwitch = RCSwitch();
-
 	mySwitch.enableReceive(PIN);  // Receiver on interrupt 0 => that is pin #2
 	time_t last_btn = 0;
     #if defined(WITH_LOCKS)
