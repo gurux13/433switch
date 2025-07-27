@@ -1,4 +1,4 @@
-CXXFLAGS=-DRPI
+CXXFLAGS=-DRPI -DWITH_LOCKS
 LDFLAGS=-lwiringPi -lwiringPiDev -lcrypt -lpaho-mqtt3c
 
 SmartSwitch: SmartSwitch.cpp ../rc-switch/RCSwitch.cpp ../rc-switch/RCSwitch.h

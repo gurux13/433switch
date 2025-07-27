@@ -10,11 +10,11 @@ extern "C" {
 
 #define ADDRESS     "tcp://localhost:1883"
 #define CLIENTID    "Buttoner"
-#define TOPIC       "control/s1/b%d"
-#define PAYLOAD1     "X"
-#define PAYLOAD2    "PRESS"
+#define TOPIC       "homeassistant/device_automation/livingroom_switch/action_b%d/action"
+#define PAYLOAD    "PRESS"
 #define QOS         1
 #define TIMEOUT     10000L
+
 
 void send_update(int btn) {
     MQTTClient client;
@@ -34,17 +34,10 @@ void send_update(int btn) {
     }
     
     char topic[] = TOPIC;
-    snprintf(topic, sizeof(topic), TOPIC, btn);
-    char p1 [] = PAYLOAD1;
+    snprintf(topic, sizeof(topic), TOPIC, btn + 1);
+    char p1 [] = PAYLOAD;
     pubmsg.payload = p1;
     pubmsg.payloadlen = (int)strlen(p1);
-    pubmsg.qos = QOS;
-    pubmsg.retained = 0;
-    MQTTClient_publishMessage(client, topic, &pubmsg, &token);
-    rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-    char pl2 [] = PAYLOAD2;
-    pubmsg.payload = pl2;
-    pubmsg.payloadlen = (int)strlen(pl2);
     pubmsg.qos = QOS;
     pubmsg.retained = 0;
     MQTTClient_publishMessage(client, topic, &pubmsg, &token);
@@ -55,6 +48,16 @@ void send_update(int btn) {
 
 RCSwitch mySwitch;
 
+void print_now() {
+  char buffer [80];
+  time_t rawtime;
+  struct tm * timeinfo;
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+
+  strftime (buffer, 80, "Now it's %F %R.", timeinfo);
+  puts(buffer);
+}	
 
 int main(int argc, char *argv[]) {
 
@@ -69,13 +72,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	mySwitch.enableReceive(PIN);  // Receiver on interrupt 0 => that is pin #2
+	mySwitch.setReceiveTolerance(80);
 	time_t last_btn = 0;
     #if defined(WITH_LOCKS)
     mySwitch.enableLocks();
     #endif
 	while(1) {
 		if (mySwitch.available()) {
+			
 			int value = mySwitch.getReceivedValue();
+			print_now();
 			printf("Found %d\n", value);
 			if ((value % 777) == 0 && time(NULL) - last_btn >= 2) {
 				int btn = value / 777 - 1;
@@ -87,9 +93,9 @@ int main(int argc, char *argv[]) {
 		}
         #if defined(WITH_LOCKS)
         mySwitch.wait();
-        #else
-		usleep(100); 
         #endif
+
+		usleep(500); 
 	}
 
 	exit(0);
