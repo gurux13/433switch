@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <map>
+#include <string>
 
 extern "C" {
 	#include "MQTTClient.h"
@@ -11,12 +13,13 @@ extern "C" {
 #define ADDRESS     "tcp://localhost:1883"
 #define CLIENTID    "Buttoner"
 #define TOPIC       "homeassistant/device_automation/livingroom_switch/action_b%d/action"
+#define TOPIC_GENERIC       "homeassistant/device_automation/433_switch_%s/action_b%d/action"
 #define PAYLOAD    "PRESS"
 #define QOS         1
 #define TIMEOUT     10000L
+const std::map<int, std::string> ALLOWED_PREFIXES  {{0xC31E, "br_blinds"}};
 
-
-void send_update(int btn) {
+void send_update(int btn, std::string sw = "") {
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     MQTTClient_message pubmsg = MQTTClient_message_initializer;
@@ -33,8 +36,13 @@ void send_update(int btn) {
         printf("Failed to connect, return code %d\n", rc);
     }
     
-    char topic[] = TOPIC;
-    snprintf(topic, sizeof(topic), TOPIC, btn + 1);
+    char topic[256];
+    if (sw == "") {
+      snprintf(topic, 256, TOPIC, btn + 1);
+    }
+    else {
+	    snprintf(topic, 256, TOPIC_GENERIC, sw.c_str(), btn);
+    }
     char p1 [] = PAYLOAD;
     pubmsg.payload = p1;
     pubmsg.payloadlen = (int)strlen(p1);
@@ -83,11 +91,26 @@ int main(int argc, char *argv[]) {
 			int value = mySwitch.getReceivedValue();
 			print_now();
 			printf("Found %d\n", value);
-			if ((value % 777) == 0 && time(NULL) - last_btn >= 2) {
-				int btn = value / 777 - 1;
-				printf("Detected button %d\n", btn);
-				send_update(btn);
-				last_btn = time(NULL);
+			if (time(NULL) - last_btn >= 2) {
+				if (value % 777 == 0) {
+					int btn = value / 777 - 1;
+					printf("Detected button %d\n", btn);
+					send_update(btn);
+					last_btn = time(NULL);
+				}
+				else {
+					int prefix = value >> 8;
+					printf("Prefix: %x\n", prefix);
+					auto prefix_elem = ALLOWED_PREFIXES.find(prefix);
+					if (prefix_elem != ALLOWED_PREFIXES.end()) {
+						int btn = value & 255;
+						std::string sw = prefix_elem->second; 
+						printf("Detected button %d on switch %s\n", btn, sw.c_str());
+						send_update(btn, sw);
+						last_btn = time(NULL);
+					}
+				}
+
 			}
 			mySwitch.resetAvailable();
 		}
