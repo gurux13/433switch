@@ -17,7 +17,10 @@ extern "C" {
 #define PAYLOAD    "PRESS"
 #define QOS         1
 #define TIMEOUT     10000L
-const std::map<int, std::string> ALLOWED_PREFIXES  {{0xC31E, "br_blinds"}};
+const std::map<int, std::string> ALLOWED_PREFIXES  {
+	{0xC31E, "br_blinds"},
+	{0xE1E7, "bathroom"}
+};
 
 void send_update(int btn, std::string sw = "") {
     MQTTClient client;
