@@ -1,4 +1,4 @@
-apt install -y gcc g++ make wget libpaho-mqtt-dev
+apt install -y gcc g++ make wget libpaho-mqtt-dev gdb
 wget https://github.com/WiringPi/WiringPi/releases/download/3.16/wiringpi_3.16_arm64.deb
 apt install ./wiringpi_3.16_arm64.deb
 cd -- $(dirname "$0")
