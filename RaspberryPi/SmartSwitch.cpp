@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 						int btn = value & 255;
 						int mask = 1;
 						while (btn > 0 && mask <= btn) {
-							if (btn & mask == 0) {
+							if ((btn & mask) == 0) {
 								mask <<= 1;
 								continue;
 							}
