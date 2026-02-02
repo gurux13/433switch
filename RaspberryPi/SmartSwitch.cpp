@@ -9,6 +9,7 @@
 #include <time.h>
 #include <map>
 #include <string>
+#include <cstring>
 
 extern "C"
 {
