@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
 
 	mySwitch.enableReceive(PIN);  // Receiver on interrupt 0 => that is pin #2
 	mySwitch.setReceiveTolerance(80);
+	mySwitch.disableTransmit();
 	time_t last_btn = 0;
     #if defined(WITH_LOCKS)
     mySwitch.enableLocks();
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]) {
 			int value = mySwitch.getReceivedValue();
 			print_now();
 			printf("Found %d\n", value);
-			if (time(NULL) - last_btn >= 2) {
+			if (time(NULL) - last_btn >= 1) {
 				if (value % 777 == 0) {
 					int btn = value / 777 - 1;
 					printf("Detected button %d\n", btn);
@@ -107,10 +108,18 @@ int main(int argc, char *argv[]) {
 					auto prefix_elem = ALLOWED_PREFIXES.find(prefix);
 					if (prefix_elem != ALLOWED_PREFIXES.end()) {
 						int btn = value & 255;
-						std::string sw = prefix_elem->second; 
-						printf("Detected button %d on switch %s\n", btn, sw.c_str());
-						send_update(btn, sw);
-						last_btn = time(NULL);
+						int mask = 1;
+						while (btn > 0 && mask <= btn) {
+							if (btn & mask == 0) {
+								mask <<= 1;
+								continue;
+							}
+							btn ^= mask;
+							std::string sw = prefix_elem->second; 
+							printf("Detected button %d on switch %s\n", mask, sw.c_str());
+							send_update(mask, sw);
+							last_btn = time(NULL);
+						}
 					}
 				}
 
